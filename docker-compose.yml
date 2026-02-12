@@ -1,0 +1,30 @@
+services:
+  # ── App Service ─────────────────────────
+  web:
+    build: .
+    container_name: cobaa-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - RUNNING_IN_DOCKER=true
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── Test Service (on-demand) ────────────
+  test:
+    build: .
+    container_name: cobaa-test
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      - TEST_URL=http://web:3000
+    entrypoint: ["node", "test.js"]
+    profiles:
+      - test

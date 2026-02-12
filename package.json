@@ -1,0 +1,17 @@
+{
+  "name": "docker-codespaces-demo",
+  "version": "1.0.0",
+  "description": "Demo project: Docker + GitHub Codespaces with automated testing",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "test": "node test.js"
+  },
+  "keywords": ["docker", "codespaces", "testing"],
+  "author": "dika",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
