@@ -1,17 +1,25 @@
 {
-  "name": "docker-codespaces-demo",
+  "name": "cobaa-server",
   "version": "1.0.0",
-  "description": "Demo project: Docker + GitHub Codespaces with automated testing",
+  "description": "Node.js + MongoDB RFID Smart Door Lock Server",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node --watch app.js",
-    "test": "node test.js"
+    "dev": "node --watch app.js"
   },
-  "keywords": ["docker", "codespaces", "testing"],
+  "keywords": [
+    "rfid",
+    "mongodb",
+    "iot",
+    "smart-lock"
+  ],
   "author": "dika",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.21.0"
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "mongoose": "^8.5.0"
   }
 }

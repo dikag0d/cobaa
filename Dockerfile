@@ -11,7 +11,7 @@ RUN npm ci --omit=dev
 FROM node:20-alpine
 
 LABEL maintainer="dika"
-LABEL description="Docker + GitHub Codespaces Demo App"
+LABEL description="RFID Smart Lock Server (MongoDB + Express)"
 
 WORKDIR /app
 
@@ -24,15 +24,14 @@ COPY . .
 
 # Set environment
 ENV NODE_ENV=production
-ENV RUNNING_IN_DOCKER=true
 ENV PORT=3000
 
 # Expose port
 EXPOSE 3000
 
-# Healthcheck
+# Healthcheck (updated path to /)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 # Run as non-root
 USER appuser

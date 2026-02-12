@@ -1,6 +1,5 @@
 /**
- * Simple test script — no external dependencies needed.
- * Tests the API endpoints to verify the app is running correctly.
+ * Test script for RFID Server (MongoDB + Express)
  */
 
 const http = require('http');
@@ -53,118 +52,60 @@ function assert(name, condition) {
 }
 
 async function runTests() {
-    console.log('');
-    console.log('🧪 ═══════════════════════════════════════');
-    console.log('   Docker App Test Suite');
-    console.log('═══════════════════════════════════════════');
-    console.log(`   Target: ${BASE_URL}`);
-    console.log('');
+    console.log(`\n🧪 Testing Target: ${BASE_URL}\n`);
 
-    // ── Test 1: GET / ──────────────────────────
+    // ── Test 1: Root Endpoint ──────────────────
     console.log('📌 Test 1: GET /');
     try {
         const res = await makeRequest('GET', '/');
         assert('Status 200', res.status === 200);
-        assert('Has message field', res.body.message !== undefined);
-        assert('Has version field', res.body.version === '1.0.0');
-        assert('Has endpoints info', res.body.endpoints !== undefined);
-    } catch (err) {
-        assert('Connection to /', false);
-        console.log(`     Error: ${err.message}`);
-    }
+        assert('Response contains "Server is running"', res.body.includes('Server is running'));
+    } catch (err) { assert('Connection failed', false); }
     console.log('');
 
-    // ── Test 2: GET /health ────────────────────
-    console.log('📌 Test 2: GET /health');
+    // ── Test 2: Get Mode ───────────────────────
+    console.log('📌 Test 2: GET /mode');
     try {
-        const res = await makeRequest('GET', '/health');
+        const res = await makeRequest('GET', '/mode');
         assert('Status 200', res.status === 200);
-        assert('Status is "ok"', res.body.status === 'ok');
-        assert('Has uptime', typeof res.body.uptime === 'number');
-        assert('Has timestamp', res.body.timestamp !== undefined);
-    } catch (err) {
-        assert('Connection to /health', false);
-        console.log(`     Error: ${err.message}`);
-    }
+        assert('Has inRoom property', res.body.inRoom !== undefined);
+    } catch (err) { assert('Connection failed', false); }
     console.log('');
 
-    // ── Test 3: GET /info ──────────────────────
-    console.log('📌 Test 3: GET /info');
+    // ── Test 3: Buzzer ─────────────────────────
+    console.log('📌 Test 3: POST /buzzer/on');
     try {
-        const res = await makeRequest('GET', '/info');
+        const res = await makeRequest('POST', '/buzzer/on', {});
         assert('Status 200', res.status === 200);
-        assert('Has node_version', res.body.node_version !== undefined);
-        assert('Has platform', res.body.platform !== undefined);
-        assert('Has memory info', res.body.memory !== undefined);
-    } catch (err) {
-        assert('Connection to /info', false);
-        console.log(`     Error: ${err.message}`);
-    }
+        assert('Message indicates activation', res.body.message.includes('activated'));
+    } catch (err) { assert('Connection failed', false); }
     console.log('');
-
-    // ── Test 4: POST /echo ─────────────────────
-    console.log('📌 Test 4: POST /echo');
-    try {
-        const payload = { hello: 'docker', test: true };
-        const res = await makeRequest('POST', '/echo', payload);
-        assert('Status 200', res.status === 200);
-        assert('Echo matches input', res.body.echo?.hello === 'docker');
-        assert('Echo has test flag', res.body.echo?.test === true);
-        assert('Has received_at', res.body.received_at !== undefined);
-    } catch (err) {
-        assert('Connection to /echo', false);
-        console.log(`     Error: ${err.message}`);
-    }
-    console.log('');
-
-    // ── Test 5: 404 Handler ────────────────────
-    console.log('📌 Test 5: GET /nonexistent (404)');
-    try {
-        const res = await makeRequest('GET', '/nonexistent');
-        assert('Status 404', res.status === 404);
-        assert('Has error field', res.body.error === 'Not Found');
-    } catch (err) {
-        assert('Connection to /nonexistent', false);
-        console.log(`     Error: ${err.message}`);
-    }
 
     // ── Results ────────────────────────────────
-    console.log('');
     console.log('═══════════════════════════════════════════');
-    console.log(`   Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
-    console.log('═══════════════════════════════════════════');
-    console.log('');
-
-    if (failed > 0) {
-        console.log('💥 Some tests FAILED!');
-        process.exit(1);
-    } else {
-        console.log('🎉 All tests PASSED!');
-        process.exit(0);
-    }
+    console.log(`   Results: ${passed} passed, ${failed} failed`);
+    if (failed > 0) process.exit(1);
 }
 
-// Retry logic — wait for the server to be ready
-async function waitForServer(retries = 10, delayMs = 2000) {
+// Retry logic
+async function waitForServer(retries = 15) {
     for (let i = 1; i <= retries; i++) {
         try {
-            await makeRequest('GET', '/health');
+            await makeRequest('GET', '/');
             return true;
         } catch {
-            console.log(`⏳ Waiting for server... attempt ${i}/${retries}`);
-            await new Promise(r => setTimeout(r, delayMs));
+            console.log(`⏳ Waiting for server... (${i}/${retries})`);
+            await new Promise(r => setTimeout(r, 2000));
         }
     }
     return false;
 }
 
 (async () => {
-    console.log(`\n🔗 Connecting to ${BASE_URL}...`);
-    const ready = await waitForServer();
-    if (!ready) {
-        console.log('❌ Server not reachable after multiple attempts. Aborting.');
+    if (await waitForServer()) {
+        await runTests();
+    } else {
+        console.log('❌ Server unreachable');
         process.exit(1);
     }
-    console.log('✅ Server is ready!\n');
-    await runTests();
 })();
